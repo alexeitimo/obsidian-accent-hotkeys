@@ -1,116 +1,179 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Setting, Editor, Notice, Plugin, PluginSettingTab, type EditorPosition } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
+// Replacement maps
 
-interface MyPluginSettings {
-	mySetting: string;
+// NOTE: I don't think this is a good way of writing maps but al least it's more readable and compact
+
+const acuteChars = new Map<string, string>([
+	['a', 'á'], ['A', 'Á'],
+	['e', 'é'], ['E', 'É'],
+	['i', 'í'], ['I', 'Í'],
+	['o', 'ó'], ['O', 'Ó'],
+	['u', 'ú'], ['U', 'Ú'],
+	['y', 'ý'], ['Y', 'Ý'],
+])
+
+const graveChars = new Map<string, string>([
+	['a', 'à'], ['A', 'À'],
+	['e', 'è'], ['E', 'È'],
+	['i', 'ì'], ['I', 'Ì'],
+	['o', 'ò'], ['O', 'Ò'],
+	['u', 'ù'], ['U', 'Ù'],
+])
+
+const circumflexChars = new Map<string, string>([
+	['a', 'â'], ['A', 'Â'],
+	['e', 'ê'], ['E', 'Ê'],
+	['i', 'î'], ['I', 'Î'],
+	['o', 'ô'], ['O', 'Ô'],
+	['u', 'û'], ['U', 'Û'],
+])
+
+const umlautChars = new Map<string, string>([
+	['a', 'ä'], ['A', 'Ä'],
+	['e', 'ë'], ['E', 'Ë'],
+	['i', 'ï'], ['I', 'Ï'],
+	['o', 'ö'], ['O', 'Ö'],
+	['u', 'ü'], ['U', 'Ü'],
+	['y', 'ÿ'], ['Y', 'Ÿ'],
+])
+
+const tildeChars = new Map<string, string>([
+	['a', 'ã'], ['A', 'Ã'],
+	['n', 'ñ'], ['N', 'Ñ'],
+	['o', 'õ'], ['O', 'Õ'],
+])
+
+// Settings interface and defaults
+
+interface Settings {
+	notifyAboutReplacements: boolean;
+	notifyAboutErrors: boolean;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+const DEFAULT_SETTINGS: Settings = {
+	notifyAboutReplacements: false,
+	notifyAboutErrors: true,
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+// Logging and character replacement functions
+
+function logResult(string: string, notify: boolean = false) {
+	if (notify) {
+		new Notice(string);
+	};
+	console.log(string);
+}
+
+function replaceCharacter(editor: Editor, chars: Map<string, string>, message: string, settings: Settings) {
+
+	// Getting the range of a single character to replace
+	const fromPos: EditorPosition = {
+		line: editor.getCursor().line, ch: editor.getCursor().ch - 1
+	};
+	const toPos: EditorPosition = {
+		line: editor.getCursor().line, ch: editor.getCursor().ch
+	};
+
+	const effectiveLetter = editor.getRange(fromPos, toPos) // Character to be replaced
+	const replacementLetter = chars.get(effectiveLetter)    // Character to replace with
+
+	let notify: boolean; // Whether to notify the user
+
+	// If a replacement is found, replace the character
+	if (replacementLetter) {
+		editor.replaceRange(replacementLetter, fromPos, toPos);
+		notify = settings.notifyAboutReplacements;
+	} else {
+		message = "No replacement found";
+		notify = settings.notifyAboutErrors;
+	}
+
+	logResult(message, notify); // Logging and (optionally) notifying the user
+}
+
+// Actual plugin class
+
+export default class AccentHotkeys extends Plugin {
+	settings: Settings;
 
 	async onload() {
+
+		// Load settings
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
+		// Register acute accent insert command
 		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
+			id: 'insert-acute',
+			name: 'Insert acute',
+			hotkeys: [{ modifiers: ['Mod'], key: '`' }],
+			editorCallback: (editor: Editor) => {
+				replaceCharacter(editor, acuteChars, "Inserted acute accent", this.settings);
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
+		// Register acute grave insert command
+		this.addCommand({
+			id: 'insert-grave',
+			name: 'Insert grave',
+			hotkeys: [{ modifiers: ['Mod'], key: "'" }],
+			editorCallback: (editor: Editor) => {
+				replaceCharacter(editor, graveChars, "Inserted grave accent", this.settings);
+			}
 		});
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
+		// Register circumflex insert command
+		this.addCommand({
+			id: 'insert-circumflex',
+			name: 'Insert circumflex',
+			hotkeys: [{ modifiers: ['Mod', 'Shift'], key: '^' }],
+			editorCallback: (editor: Editor) => {
+				replaceCharacter(editor, circumflexChars, "Inserted circumflex", this.settings);
+			}
+		});
 
-	onunload() {
+		// Register umlaut insert command
+		this.addCommand({
+			id: 'insert-umlaut',
+			name: 'Insert umlaut',
+			hotkeys: [{ modifiers: ['Mod', 'Shift'], key: ':' }],
+			editorCallback: (editor: Editor) => {
+				replaceCharacter(editor, umlautChars, "Inserted umlaut", this.settings);
+			}
+		});
+
+		// Register tilde insert command
+		this.addCommand({
+			id: 'insert-tilde',
+			name: 'Insert tilde',
+			hotkeys: [{ modifiers: ['Mod', 'Shift'], key: '~' }],
+			editorCallback: (editor: Editor) => {
+				replaceCharacter(editor, tildeChars, "Inserted tilde", this.settings);
+			}
+		});
+
+		// Add a settings tab
+		this.addSettingTab(new SettingsTab(this.app, this));
 
 	}
 
+	// Loading setting on launch
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
+	// Saving settings from settings tab
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+// Settings tab class
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
+class SettingsTab extends PluginSettingTab {
+	plugin: AccentHotkeys;
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: AccentHotkeys) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -120,14 +183,25 @@ class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		// Replacement notification toggle
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+			.setName('Replacement notification')
+			.setDesc('Show a notification each time a character is replaced with an accented one')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.notifyAboutReplacements)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.notifyAboutReplacements = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// Error notification toggle
+		new Setting(containerEl)
+			.setName('Unsuitable character notification')
+			.setDesc("Show a notification when a character can't be replaced with an accented one")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.notifyAboutErrors)
+				.onChange(async (value) => {
+					this.plugin.settings.notifyAboutErrors = value;
 					await this.plugin.saveSettings();
 				}));
 	}
