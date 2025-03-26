@@ -4,11 +4,11 @@ I could not find a simple and intuitive plugin to use diacritical characters com
 
 ## Commands
 
-- Accent hotkeys: Insert acute (`ctrl` + ``backtick ` `` )
-- Accent hotkeys: Insert grave (`ctrl` + `apostrophe '`)
-- Accent hotkeys: Insert circumflex (`ctrl` + `shift` + `caret ^`)
-- Accent hotkeys: Insert umlaut (`ctrl` + `shift` + `colon :`)
-- Accent hotkeys: Insert tilde (`ctrl` + `shift` + `tilde ~`)
+- Insert acute (`ctrl` + ``backtick ` `` )
+- Insert grave (`ctrl` + `apostrophe '`)
+- Insert circumflex (`ctrl` + `shift` + `caret ^`)
+- Insert umlaut (`ctrl` + `shift` + `colon :`)
+- Insert tilde (`ctrl` + `shift` + `tilde ~`)
 
 ## Links
 
