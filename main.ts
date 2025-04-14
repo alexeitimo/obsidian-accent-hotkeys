@@ -2,7 +2,10 @@ import { App, Setting, Editor, Notice, Plugin, PluginSettingTab, type EditorPosi
 
 // Replacement maps
 
-// NOTE: I don't think this is a good way of writing maps but al least it's more readable and compact
+// NOTE: I don't think this is a good way of writing maps but at least it's more readable and compact
+
+type ReplacementPair = [string, string]
+type ReplacementPairWithComment = [string, string, string]
 
 const acuteChars = new Map<string, string>([
 	['a', 'á'], ['A', 'Á'],
@@ -44,6 +47,12 @@ const tildeChars = new Map<string, string>([
 	['o', 'õ'], ['O', 'Õ'],
 ])
 
+const ampersandChars = new Map<string, string>([
+	['a', 'æ'], ['A', 'Æ'],
+	['o', 'œ'], ['O', 'Œ'],
+	['s', 'ß'],
+])
+
 // Settings interface and defaults
 
 interface Settings {
@@ -63,6 +72,15 @@ function logResult(string: string, notify: boolean = false) {
 		new Notice(string);
 	};
 	console.log(string);
+}
+
+function insertCharacter(editor: Editor, char: string, message: string, settings: Settings) {
+	editor.replaceRange(char, editor.getCursor())
+	logResult(message, settings.notifyAboutErrors)
+	editor.setCursor({
+		line: editor.getCursor().line,
+		ch: editor.getCursor().ch + 1
+	})
 }
 
 function replaceCharacter(editor: Editor, chars: Map<string, string>, message: string, settings: Settings) {
@@ -149,6 +167,36 @@ export default class AccentHotkeys extends Plugin {
 			hotkeys: [{ modifiers: ['Mod', 'Shift'], key: '~' }],
 			editorCallback: (editor: Editor) => {
 				replaceCharacter(editor, tildeChars, "Inserted tilde", this.settings);
+			}
+		});
+
+		// Register double letter insert command
+		this.addCommand({
+			id: 'insert-ampersand-char',
+			name: 'Ampersand insert',
+			hotkeys: [{ modifiers: ['Mod', 'Shift'], key: '&' }],
+			editorCallback: (editor: Editor) => {
+				replaceCharacter(editor, ampersandChars, "Used ampersand insert", this.settings);
+			}
+		});
+
+		// Register upside-down question mark insert command
+		this.addCommand({
+			id: 'insert-upside-down-question',
+			name: 'Insert upside-down question mark',
+			hotkeys: [{ modifiers: ['Mod', 'Alt', 'Shift'], key: '?' }],
+			editorCallback: (editor: Editor) => {
+				insertCharacter(editor, '¿', "Inserted upside-down question mark", this.settings);
+			}
+		});
+
+		// Register upside-down exclamation mark insert command
+		this.addCommand({
+			id: 'insert-upside-down-exclamation',
+			name: 'Insert upside-down exclamation mark',
+			hotkeys: [{ modifiers: ['Mod', 'Alt', 'Shift'], key: '!' }],
+			editorCallback: (editor: Editor) => {
+				insertCharacter(editor, '¡', "Inserted upside-down exclamation mark", this.settings);
 			}
 		});
 
