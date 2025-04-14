@@ -1,6 +1,8 @@
 # Obsidian Accent Plugin
 
-I could not find a simple and intuitive plugin to use diacritical characters comfortably. So I created my own. The hotkeys are inspired by Microsoft Office.
+This plugin for [Obsidian](https://obsidian.md/) makes it easy to use some didactic symbols without a lot of keyboards by using commands associated with Microsoft Office-inspired hotkeys.
+
+When a command is triggered the plugin takes a character right before the cursor and replaces it with an accented one if possible.
 
 ## Commands
 
@@ -9,6 +11,11 @@ I could not find a simple and intuitive plugin to use diacritical characters com
 - Insert circumflex (`ctrl` + `shift` + `caret ^`)
 - Insert umlaut (`ctrl` + `shift` + `colon :`)
 - Insert tilde (`ctrl` + `shift` + `tilde ~`)
+
+The following commands are not about didactics, but have been added for convenience. Note that there is no need to enter `?` or `!` first.
+
+- Insert upside-down question mark (`ctrl` + `alt` + `shift` + `?`)
+- Insert upside-down exclamation mark (`ctrl` + `alt` + `shift` + `!`)
 
 ## Links
 
