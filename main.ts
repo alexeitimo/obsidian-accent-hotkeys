@@ -76,11 +76,11 @@ function logResult(string: string, notify: boolean = false) {
 
 function insertCharacter(editor: Editor, char: string, message: string, settings: Settings) {
 	editor.replaceRange(char, editor.getCursor())
-	logResult(message, settings.notifyAboutErrors)
 	editor.setCursor({
 		line: editor.getCursor().line,
 		ch: editor.getCursor().ch + 1
 	})
+	logResult(message, settings.notifyAboutReplacements)
 }
 
 function replaceCharacter(editor: Editor, chars: Map<string, string>, message: string, settings: Settings) {
